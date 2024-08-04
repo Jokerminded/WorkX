@@ -1,0 +1,63 @@
+package main
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+
+	"github.com/hyperledger/fabric-chaincode-go/shim"
+)
+
+// DataVerificationChaincode is the chaincode struct
+type DataVerificationChaincode struct {
+}
+
+// Init is called when the chaincode is instantiated
+func (c *DataVerificationChaincode) Init(stub shim.ChaincodeStubInterface) ([]byte, error) {
+	return nil, nil
+}
+
+// Invoke is called when a transaction is invoked on the chaincode
+func (c *DataVerificationChaincode) Invoke(stub shim.ChaincodeStubInterface) ([]byte, error) {
+	function, args := stub.GetFunctionAndParameters()
+
+	if function == "verifyData" {
+		return c.verifyData(stub, args)
+	}
+
+	return nil, fmt.Errorf("Invalid function name")
+}
+
+// verifyData verifies the data by checking its hash
+func (c *DataVerificationChaincode) verifyData(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("Invalid number of arguments")
+	}
+
+	data := args[0]
+	expectedHash := args[1]
+
+	// Calculate the hash of the data
+	hash := calculateHash(data)
+
+	// Check if the calculated hash matches the expected hash
+	if hash != expectedHash {
+		return nil, fmt.Errorf("Data verification failed")
+	}
+
+	return []byte("Data verification successful"), nil
+}
+
+// calculateHash calculates the hash of the given data
+func calculateHash(data string) string {
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
+}
+
+func main() {
+	fmt.Println("DataVerificationChaincode main()")
+}
+
+func (c *DataVerificationChaincode) Query(stub shim.ChaincodeStubInterface) ([]byte, error) {
+	return []byte("Query is not supported"), nil
+}
